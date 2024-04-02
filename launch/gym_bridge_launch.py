@@ -24,6 +24,9 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.substitutions import Command
 from ament_index_python.packages import get_package_share_directory
+from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
+from launch.actions import GroupAction
+from launch.actions import IncludeLaunchDescription
 import os
 import yaml
 
@@ -44,11 +47,20 @@ def generate_launch_description():
         name='bridge',
         parameters=[config]
     )
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz',
-        arguments=['-d', os.path.join(get_package_share_directory('f1tenth_gym_ros'), 'launch', 'gym_bridge.rviz')]
+    # rviz_node = Node(
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     name='rviz',
+    #     arguments=['-d', os.path.join(get_package_share_directory('f1tenth_gym_ros'), 'launch', 'gym_bridge.rviz')]
+    # )
+
+    foxglove_bridge_node = IncludeLaunchDescription(
+        XMLLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('foxglove_bridge'),
+                'launch/foxglove_bridge_launch.xml'
+            )
+        )
     )
     map_server_node = Node(
         package='nav2_map_server',
@@ -84,7 +96,8 @@ def generate_launch_description():
     )
 
     # finalize
-    ld.add_action(rviz_node)
+    # ld.add_action(rviz_node)
+    ld.add_action(foxglove_bridge_node)
     ld.add_action(bridge_node)
     ld.add_action(nav_lifecycle_node)
     ld.add_action(map_server_node)
